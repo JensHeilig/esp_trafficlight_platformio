@@ -59,7 +59,9 @@ class Parameters {
     int init();
 
   private:
-    void initPrefPars(); /**< restores or sets to default all parameters from EEPROM */
+    void initPrefPars(); /**< Set up parameters module */
+    void getPrefPars(); /**< retrieves all parameters from EEPROM (or sets to default if not available) */
+    void putPrefPars(); /**< stores all parameters in EEPROM */
 };
 
 #endif /* #ifndef PARAMETERS_H */

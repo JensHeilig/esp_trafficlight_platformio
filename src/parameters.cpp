@@ -60,18 +60,22 @@ Parameters::Parameters()
  */
 int Parameters::init()
 {
-  // Open Preferences with "trafficlight" namespace. Each application module, library, etc
-  // has to use a namespace name to prevent key name collisions. We will open storage in
-  // RW-mode (second parameter has to be false).
-  // Note: Namespace name is limited to 15 chars.
   preferences.begin("trafficlight", false);
+  getPrefPars();
 
-  /*AsyncWiFiManagerParameter custom_friendly_name("name", "Friendly Name", _friendly_name, 40);
-  AsyncWiFiManagerParameter custom_mqtt_server("server", "MQTT Server", _mqtt_server, 40);
-  AsyncWiFiManagerParameter custom_mqtt_port("port", "MQTT Port", _mqtt_port, 6);
-*/
+  String tmpPort = String(mqttPort);
+  String tmpTime = String(sleepTime);
+  
+  AsyncWiFiManagerParameter custom_friendly_name("name", "Device Name", deviceName.c_str(), 40);
+  AsyncWiFiManagerParameter custom_mqtt_server("server", "MQTT Server", mqttBrokerAddr.c_str(), 40);
+  AsyncWiFiManagerParameter custom_mqtt_port("port", "MQTT Port", tmpPort.c_str(), 6);
+  AsyncWiFiManagerParameter custom_mqtt_user("user", "MQTT Username (if required)", mqttUser.c_str(), 6);
+  AsyncWiFiManagerParameter custom_mqtt_pwd("password", "MQTT Password (if required)", mqttPwd.c_str(), 6);
+  AsyncWiFiManagerParameter custom_mqtt_topic("topic", "MQTT Topic", mqttTopic.c_str(), 60);
+  AsyncWiFiManagerParameter custom_sleeptime("sleeptime", "Sleep Time bewtween light updates (seconds)", tmpTime.c_str(), 4);
+
   AsyncWiFiManager wifiManager(&server,&dns);
-  if(!wifiManager.autoConnect(this->deviceName.c_str())) {
+  if(!wifiManager.autoConnect(deviceName.c_str())) {
     Serial.println("failed to connect to SSID and hit timeout");
     // XXXX TODO go to deep sleep for some (long) time or return error
     delay(1000);
@@ -83,7 +87,7 @@ int Parameters::init()
 /**
  *  Get all parameters from EEPROM, set default value if not available from EEPROM
  */
-void Parameters::initPrefPars()
+void Parameters::getPrefPars()
 {
   mqttBrokerAddr = preferences.getString("BrokerAddr", "");
   deviceName = preferences.getString("DeviceName", "ESP-trafficlight");
@@ -92,4 +96,18 @@ void Parameters::initPrefPars()
   mqttPwd = preferences.getString("Password", "");
   mqttTopic = preferences.getString("Topic", "ESP-trafficlight");
   sleepTime = preferences.getUInt("sleepTime", 20);
+}
+
+/**
+ *  Store all parameters in EEPROM
+ */
+void Parameters::putPrefPars()
+{
+  preferences.putString("BrokerAddr", mqttBrokerAddr);
+  preferences.putString("DeviceName", deviceName);
+  preferences.putUShort("BrokerPort", mqttPort);
+  preferences.putString("Username", mqttUser);
+  preferences.putString("Password", mqttPwd);
+  preferences.putString("Topic", mqttTopic);
+  preferences.putUInt("sleepTime", sleepTime);
 }
