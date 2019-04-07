@@ -57,11 +57,11 @@ class Parameters {
      * parametersInit initializes the parameters module, handles WiFiManager setup
      */
     int init();
+    void putPrefPars(); /**< stores all parameters in EEPROM */
 
   private:
     void initPrefPars(); /**< Set up parameters module */
     void getPrefPars(); /**< retrieves all parameters from EEPROM (or sets to default if not available) */
-    void putPrefPars(); /**< stores all parameters in EEPROM */
 };
 
 #endif /* #ifndef PARAMETERS_H */
