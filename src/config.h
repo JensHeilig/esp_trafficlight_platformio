@@ -52,6 +52,7 @@
  *  Miscellaneous Configuration items (used internally by Software)
  * @{ */
 #define uS_TO_S_FACTOR 1000000  /**< Conversion factor for micro seconds to seconds */
+#define MAX_PAYLOAD_LEN 50 /**< maximum length (in bytes)  for payload received from mqtt */
 /** @} */
 
 #endif /* ifndef CONFIG_H */

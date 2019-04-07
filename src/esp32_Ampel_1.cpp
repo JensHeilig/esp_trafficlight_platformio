@@ -11,8 +11,8 @@ RTC_DATA_ATTR int bootCount = 0; ///< counts number of boots since last Power-On
 unsigned int twait = 0; ///< measure time before going to sleep
 
 /*
-Method to print the reason by which ESP32
-has been awaken from sleep
+ * Print the reason by which ESP32
+ * has been woken from sleep
 */
 void print_wakeup_reason(){
   esp_sleep_wakeup_cause_t wakeup_reason;
@@ -30,13 +30,32 @@ void print_wakeup_reason(){
   }
 }
 
+/**
+ * Put ESP32 to sleep
+ */
+void goToSleep()
+{
+  /*
+  First we configure the wake up source
+  We set our ESP32 to wake up every 5 seconds
+  */
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  Serial.println("Setup ESP32 to sleep for " + String(TIME_TO_SLEEP) + " Seconds");
+  Serial.flush(); 
+  esp_deep_sleep_start();
+  Serial.println("This will never be printed");
+}
+
 void setup() {
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
   
   Serial.begin(115200);
 
-  par.init();
+  if (!par.init()) {
+    // Could not connect to WiFi ==> go to sleep
+    goToSleep();
+  }
 
   //Increment boot number and print it every reboot
   ++bootCount;
@@ -44,14 +63,6 @@ void setup() {
 
   //Print the wakeup reason for ESP32
   print_wakeup_reason();
-
-  /*
-  First we configure the wake up source
-  We set our ESP32 to wake up every 5 seconds
-  */
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
-  Serial.println("Setup ESP32 to sleep for " + String(TIME_TO_SLEEP) +
-  " Seconds");
 
   twait = millis();
 }
@@ -74,9 +85,6 @@ void loop() {
   if (millis() - twait > (TIME_UNTIL_SLEEP*1000))
   {
     // Go to sleep after TIME_UNTIL_SLEEP seconds
-    Serial.println("Going to sleep now");
-    Serial.flush(); 
-    esp_deep_sleep_start();
-    Serial.println("This will never be printed");
+    goToSleep();
   }
 }

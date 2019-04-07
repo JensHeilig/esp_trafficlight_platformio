@@ -58,8 +58,6 @@ void saveConfigCallback () {
   shouldSaveConfig = true;
 }
 
-
-
 /**
  * Parameters Class Constructor
  */
@@ -112,6 +110,9 @@ int Parameters::init()
     return -1;
   }
   Serial.println("connected to WiFi");
+  Serial.println("local ip");
+  Serial.println(WiFi.localIP());
+
 
   if (shouldSaveConfig) {
     Serial.println("Saving config parameters");
