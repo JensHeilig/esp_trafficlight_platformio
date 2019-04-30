@@ -40,8 +40,8 @@ void goToSleep()
   First we configure the wake up source
   We set our ESP32 to wake up every 5 seconds
   */
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_SECS);
-  Serial.println("Setup ESP32 to sleep for " + String(TIME_TO_SLEEP) + " Seconds");
+  esp_sleep_enable_timer_wakeup(par.sleepTime * uS_TO_SECS);
+  Serial.println("Setup ESP32 to sleep for " + String(par.sleepTime) + " Seconds");
   Serial.flush();
   esp_deep_sleep_start();
   Serial.println("This will never be printed");
@@ -87,6 +87,7 @@ void loop() {
   if (! digitalRead(BUTTON))
   {
     twait = millis();
+    oldtime = (millis() - twait) / MS_TO_SECS;
 
     // detect long press
     if (longpress)
@@ -119,9 +120,13 @@ void loop() {
   if (millis() - twait > (TIME_UNTIL_SLEEP * MS_TO_SECS))
   {
     // Go to sleep after TIME_UNTIL_SLEEP seconds if not inhibited via mqtt
-    if (1 == (sleepflags & SLEEP_MQTT_NOT_INHIBITED))
+    if (SLEEP_MQTT_NOT_INHIBITED == (sleepflags & SLEEP_MQTT_NOT_INHIBITED))
     {
       goToSleep();
+    } else {
+      Serial.println("Sleep inhibited. Not sleeping.");
+      twait = millis();
+      oldtime = (millis() - twait) / MS_TO_SECS;
     }
   }
 }
