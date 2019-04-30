@@ -9,6 +9,7 @@ Parameters par;
 
 RTC_DATA_ATTR int bootCount = 0; ///< counts number of boots since last Power-On (stored in RTC memory, persistent over Deep Sleep)
 unsigned int twait = 0; ///< measure time before going to sleep
+unsigned int sleepflags = 0; ///< bitfield in which all components may signal that they are ready to go to sleep
 
 /*
  * Print the reason by which ESP32
@@ -75,6 +76,13 @@ void loop() {
 
   mqttLoop();
 
+  if ((SLEEP_READY_MASK & sleepflags) == SLEEP_READY_MASK) {
+    // got to sleep if all flags are ready unless button is pressed
+    if (digitalRead(BUTTON)) {
+      goToSleep();
+    }
+  }
+
   // delay sleep if button is pressed
   if (! digitalRead(BUTTON))
   {
@@ -110,7 +118,10 @@ void loop() {
 
   if (millis() - twait > (TIME_UNTIL_SLEEP * MS_TO_SECS))
   {
-    // Go to sleep after TIME_UNTIL_SLEEP seconds
-    goToSleep();
+    // Go to sleep after TIME_UNTIL_SLEEP seconds if not inhibited via mqtt
+    if (0 == (sleepflags & SLEEP_MQTT_NOT_INHIBITED))
+    {
+      goToSleep();
+    }
   }
 }

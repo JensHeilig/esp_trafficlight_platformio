@@ -61,4 +61,17 @@
 #define LONG_PRESS_TIME 3   /**< time (in seconds) to detect a long button press event */
 /** @} */
 
+/** @addtogroup flagsdone Flags for sending device to sleep
+ *  Flags for sending the device to sleep as fast as possible
+ * @{ */
+extern unsigned int sleepflags;     /**< bitfield in which all components may signal that they are ready to go to sleep */
+#define SLEEP_MQTT_RED 1            /**< mqtt message for setting red LED has arrived */
+#define SLEEP_MQTT_YELLOW  2        /**< mqtt message for setting yellow LED has arrived */
+#define SLEEP_MQTT_GREEN 4          /**< mqtt message for setting green LED has arrived */
+#define SLEEP_MQTT_STATUS_SENT 8    /**< mqtt status messages have been sent */
+#define SLEEP_MQTT_NOT_INHIBITED 16 /**< mqtt topic "sleepInhibit" has _not_ received "ON" */
+
+#define SLEEP_READY_MASK (SLEEP_MQTT_RED | SLEEP_MQTT_YELLOW | SLEEP_MQTT_GREEN | SLEEP_MQTT_STATUS_SENT | SLEEP_MQTT_NOT_INHIBITED) /**< all required flags before going to sleep */
+/** @} */
+
 #endif /* ifndef CONFIG_H */

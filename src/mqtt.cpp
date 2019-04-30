@@ -35,11 +35,15 @@
  * subscribed zu einem konfigurierbaren Topic. Default: eSystems/Ampeln/${Gerätename oder Nummer}
  * Einstellbar ist der komplette String, "%s" im String wird automatisch durch den Gerätenamen ersetzt
  * subtopics:
- * subscribe:.../set/red {PWM-Wert 0-100% Default: 0}
- * subscribe:.../set/yellow {PWM-Wert 0-100% Default: 0}
- * subscribe:.../set/green {PWM-Wert 0-100% Default: 0}
- * subscribe:.../set/interval {Zeit in Sekunden die das Gerät schläft, bevor es sich wieder aufweckt. Default: 20 Sekunden}
- * publish: .../status/Name {Gerätename}
+ * subscribe:.../set/red ON/OFF
+ * subscribe:.../set/red/pwm {PWM-Wert 0-100% Default: 0}
+ * subscribe:.../set/yellow ON/OFF
+ * subscribe:.../set/yellow/pwm {PWM-Wert 0-100% Default: 0}
+ * subscribe:.../set/green ON/OFF
+ * subscribe:.../set/green/pwm {PWM-Wert 0-100% Default: 0}
+ * subscribe:.../set/sleepinterval {Zeit in Sekunden die das Gerät schläft, bevor es sich wieder aufweckt. Default: 20 Sekunden}
+ * subscribe:.../set/sleepInhibit ON/OFF to prevent device from going to sleep (set this as retained to ON to keep device awake)
+ * publish: .../status/Devicename {Gerätename}
  * publish: .../status/nwakeup {wie oft ist das Gerät schon aufgewacht}
  * publish: .../status/interval {Welche Sleep-Time ist gerade eingestellt}
  * publish: .../status/red {Welches PWM ist gerade für rot eingestellt}
@@ -80,7 +84,7 @@ void cb_setSleepInterval(char* message);
 void cb_setredpwm(char* msg);
 void cb_setyellowpwm(char* msg);
 void cb_setgreenpwm(char* msg);
-
+void cb_setSleepInhibit (char* message);
 
 const SUBSCRIBE_DESCRIPTION_t subscribtion_topics[] =
 {
@@ -91,7 +95,8 @@ const SUBSCRIBE_DESCRIPTION_t subscribtion_topics[] =
   {"set/green", ONOFF_TYPE, cb_setgreen},
   {"set/green/pwm", INT_TYPE, cb_setgreenpwm},
   {"set/sleepinterval", INT_TYPE, cb_setSleepInterval},
-  {"",NONE_TYPE,nullptr}, ///< terminating item!
+   {"set/sleepInhibit", ONOFF_TYPE, cb_setSleepInhibit},
+ {"",NONE_TYPE,nullptr}, ///< terminating item!
 };
 
 WiFiClient wifiClient;
@@ -137,6 +142,7 @@ void cb_setred (char* message) {
    // turn off red
     Serial.println("Red light OFF");
   }
+  sleepflags |= SLEEP_MQTT_RED;
 }
 
 void cb_setyellow(char* message) {
@@ -148,6 +154,7 @@ void cb_setyellow(char* message) {
    // turn off red
     Serial.println("Yellow light OFF");
   }
+  sleepflags |= SLEEP_MQTT_YELLOW;
 }
 
 void cb_setgreen  (char* message) {
@@ -159,21 +166,25 @@ void cb_setgreen  (char* message) {
    // turn off red
     Serial.println("Green light OFF");
   }
+  sleepflags |= SLEEP_MQTT_GREEN;
 }
 
 void cb_setredpwm(char* msg) {
   int n = atoi(msg);
   // TODO set PWM output
+  sleepflags |= SLEEP_MQTT_RED;
 }
 
 void cb_setyellowpwm(char* msg) {
   int n = atoi(msg);
   // TODO set PWM output
+  sleepflags |= SLEEP_MQTT_YELLOW;
 }
 
 void cb_setgreenpwm(char* msg) {
   int n = atoi(msg);
   // TODO set PWM output
+  sleepflags |= SLEEP_MQTT_GREEN;
 }
 
 void cb_setSleepInterval (char* message) {
@@ -185,13 +196,25 @@ void cb_setSleepInterval (char* message) {
   }
 }
 
+void cb_setSleepInhibit (char* message) {
+  if(strcasecmp(message,"on")==0) {
+    Serial.println("sleep inhibited");
+    sleepflags &= ~SLEEP_MQTT_NOT_INHIBITED;
+  }
+  else if(strcasecmp(message,"off")==0) {
+    Serial.println("sleep no longer inhibited");
+    sleepflags |= SLEEP_MQTT_NOT_INHIBITED;
+  }
+}
+
 void mqttSetup() {
   mqttclient.setServer(par.mqttBrokerAddr.c_str(), par.mqttPort);
   mqttclient.setCallback(mqttCallback);
+  sleepflags |= SLEEP_MQTT_NOT_INHIBITED;
 }
 
 void reconnect() {
-  String topic = par.mqttTopic + "/#";
+  String topic = par.mqttTopic + "/set/#";
   // Loop until we're reconnected
   if (!mqttclient.connected()) {
     Serial.print("Attempting MQTT connection...");
@@ -231,5 +254,6 @@ void mqttLoop() {
     mqttclient.publish(String(par.mqttTopic + "/status/ip").c_str(), ipaddress.c_str());
     mqttclient.publish(String(par.mqttTopic + "/status/RSSI").c_str(), rssi.c_str());
     mqttclient.publish(String(par.mqttTopic + "/status/MAC").c_str(), mac.c_str());
+    sleepflags |= SLEEP_MQTT_STATUS_SENT;
   }
 }
