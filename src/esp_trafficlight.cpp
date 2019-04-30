@@ -119,7 +119,7 @@ void loop() {
   if (millis() - twait > (TIME_UNTIL_SLEEP * MS_TO_SECS))
   {
     // Go to sleep after TIME_UNTIL_SLEEP seconds if not inhibited via mqtt
-    if (0 == (sleepflags & SLEEP_MQTT_NOT_INHIBITED))
+    if (1 == (sleepflags & SLEEP_MQTT_NOT_INHIBITED))
     {
       goToSleep();
     }
