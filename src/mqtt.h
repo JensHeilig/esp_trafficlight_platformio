@@ -37,5 +37,6 @@
 #define MQTT_H
 
 void mqttSetup();
+void mqttLoop();
 
 #endif /* ifndef MQTT_H */

@@ -25,7 +25,7 @@
  *
  * @date   2019-02-16
  * @author Jens Heilig
- * @brief  
+ * @brief
  *
  * Handles User-settable parameters, user-configuration.
  * This includes WiFi parameters (SSID, password), MQTT
@@ -34,10 +34,11 @@
  <hr>
 **************************************************************************/
 
+#include "config.h"
 #include <Preferences.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
-#define WIFI_MANAGER_USE_ASYNC_WEB_SERVER 
+#define WIFI_MANAGER_USE_ASYNC_WEB_SERVER
 #include <ESPAsyncWiFiManager.h>
 
 #include "parameters.h"
@@ -79,16 +80,17 @@ int Parameters::init()
 
   String tmpPort = String(mqttPort);
   String tmpTime = String(sleepTime);
-  
+
   AsyncWiFiManagerParameter custom_friendly_name("name", "Device Name", deviceName.c_str(), 40);
   AsyncWiFiManagerParameter custom_mqtt_server("server", "MQTT Server", mqttBrokerAddr.c_str(), 40);
   AsyncWiFiManagerParameter custom_mqtt_port("port", "MQTT Port", tmpPort.c_str(), 6);
   AsyncWiFiManagerParameter custom_mqtt_user("user", "MQTT Username (if required)", mqttUser.c_str(), 12);
   AsyncWiFiManagerParameter custom_mqtt_pwd("password", "MQTT Password (if required)", mqttPwd.c_str(), 12);
-  AsyncWiFiManagerParameter custom_mqtt_topic("topic", "MQTT Topic", mqttTopic.c_str(), 60);
+  AsyncWiFiManagerParameter custom_mqtt_topic("topic", "MQTT Topic", mqttTopic.c_str(), MQTT_MAX_TOPIC_LEN);
   AsyncWiFiManagerParameter custom_sleeptime("sleeptime", "Sleep Time bewtween light updates (seconds)", tmpTime.c_str(), 4);
 
   AsyncWiFiManager wifiManager(&server,&dns);
+  //wifiManager.resetSettings();
 
   wifiManager.addParameter(&custom_friendly_name);
   wifiManager.addParameter(&custom_mqtt_server);
@@ -102,17 +104,17 @@ int Parameters::init()
   wifiManager.setSaveConfigCallback(saveConfigCallback);
 
   // set max. time trying to connect to WiFi, otherwise we drain too much battery
-  wifiManager.setTimeout(30);
+  //wifiManager.setConfigPortalTimeout(300000);
+
 
   if(!wifiManager.autoConnect(deviceName.c_str())) {
     Serial.println("failed to connect to SSID and hit timeout");
-    delay(1000);
+    delay(100);
     return -1;
   }
   Serial.println("connected to WiFi");
   Serial.println("local ip");
   Serial.println(WiFi.localIP());
-
 
   if (shouldSaveConfig) {
     Serial.println("Saving config parameters");
@@ -125,7 +127,6 @@ int Parameters::init()
     sleepTime = atoi(custom_sleeptime.getValue());
     putPrefPars();
   }
-
   return 0;
 }
 
@@ -141,6 +142,12 @@ void Parameters::getPrefPars()
   mqttPwd = preferences.getString("Password", "");
   mqttTopic = preferences.getString("Topic", "ESP-trafficlight");
   sleepTime = preferences.getUInt("sleepTime", 20);
+  Serial.print("BrokerAddr: "); Serial.println(mqttBrokerAddr);
+  Serial.print("DeviceName: "); Serial.println(deviceName);
+  Serial.print("BrokerPort: "); Serial.println(mqttPort);
+  Serial.print("Username: "); Serial.println(mqttPwd);
+  Serial.print("Topic: "); Serial.println(mqttTopic);
+  Serial.print("sleepTime: "); Serial.println(sleepTime);
 }
 
 /**
@@ -155,4 +162,16 @@ void Parameters::putPrefPars()
   preferences.putString("Password", mqttPwd);
   preferences.putString("Topic", mqttTopic);
   preferences.putUInt("sleepTime", sleepTime);
+}
+
+/**
+ * Start the Configuration Portal to allow user to change parameters
+ */
+void Parameters::startConfigPortal()
+{
+  WiFi.disconnect(true);   // still not erasing the ssid/pw. Will happily reconnect on next start
+  WiFi.begin("0","0");       // adding this effectively seems to erase the previous stored SSID/PW
+  delay(1000);
+  ESP.restart();
+  delay(1000);
 }

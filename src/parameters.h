@@ -58,6 +58,7 @@ class Parameters {
      */
     int init();
     void putPrefPars(); /**< stores all parameters in EEPROM */
+    void startConfigPortal();
 
   private:
     void initPrefPars(); /**< Set up parameters module */

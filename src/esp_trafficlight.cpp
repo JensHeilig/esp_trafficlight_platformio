@@ -39,9 +39,9 @@ void goToSleep()
   First we configure the wake up source
   We set our ESP32 to wake up every 5 seconds
   */
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_SECS);
   Serial.println("Setup ESP32 to sleep for " + String(TIME_TO_SLEEP) + " Seconds");
-  Serial.flush(); 
+  Serial.flush();
   esp_deep_sleep_start();
   Serial.println("This will never be printed");
 }
@@ -49,10 +49,10 @@ void goToSleep()
 void setup() {
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
-  
+
   Serial.begin(115200);
 
-  if (!par.init()) {
+  if (0 != par.init()) {
     // Could not connect to WiFi ==> go to sleep
     goToSleep();
   }
@@ -64,25 +64,51 @@ void setup() {
   //Print the wakeup reason for ESP32
   print_wakeup_reason();
 
+  mqttSetup();
+
   twait = millis();
 }
 
 void loop() {
-  
+  static unsigned long oldtime = 0;
+  static unsigned long longpress = 0;
+
+  mqttLoop();
+
   // delay sleep if button is pressed
   if (! digitalRead(BUTTON))
   {
     twait = millis();
+
+    // detect long press
+    if (longpress)
+    {
+      if (((millis() - longpress) / MS_TO_SECS) > LONG_PRESS_TIME)
+      {
+        Serial.println("Long press Event dected");
+        par.startConfigPortal();
+        longpress=0;
+      }
+    } else
+    {
+      longpress = millis();
+    }
+    
+  } else
+  {
+    longpress=0;
   }
 
-  if (!((millis() - twait) % 1000))
+
+  if ((unsigned int)((millis() - twait) / MS_TO_SECS) >= oldtime + 5)
   {
+    oldtime = (millis() - twait) / MS_TO_SECS;
     Serial.print ("Going to sleep in ");
-    Serial.print (TIME_UNTIL_SLEEP - (millis() - twait) / 1000);
+    Serial.print (TIME_UNTIL_SLEEP - (millis() - twait) / MS_TO_SECS);
     Serial.println(" seconds");
   }
 
-  if (millis() - twait > (TIME_UNTIL_SLEEP*1000))
+  if (millis() - twait > (TIME_UNTIL_SLEEP * MS_TO_SECS))
   {
     // Go to sleep after TIME_UNTIL_SLEEP seconds
     goToSleep();

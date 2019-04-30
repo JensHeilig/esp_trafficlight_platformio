@@ -57,9 +57,12 @@
 #include "mqtt.h"
 #include "parameters.h"
 
-#define DBG_MQTT ///< enables debug output on serial port
+#define DBG_MQTT  ///< enables debug output on serial port
+
+extern int bootCount;
 
 typedef enum {
+  NONE_TYPE = 0,
   ONOFF_TYPE,
   INT_TYPE
 } TYPE_t;
@@ -73,27 +76,36 @@ typedef struct {
 void cb_setred(char* message);
 void cb_setgreen(char* message);
 void cb_setyellow(char* message);
-void cb_setinterval(char* message);
+void cb_setSleepInterval(char* message);
+void cb_setredpwm(char* msg);
+void cb_setyellowpwm(char* msg);
+void cb_setgreenpwm(char* msg);
+
 
 const SUBSCRIBE_DESCRIPTION_t subscribtion_topics[] =
 {
   {"set/red", ONOFF_TYPE, cb_setred},
+  {"set/red/pwm", INT_TYPE, cb_setredpwm},
   {"set/yellow", ONOFF_TYPE, cb_setyellow},
+  {"set/yellow/pwm", INT_TYPE, cb_setyellowpwm},
   {"set/green", ONOFF_TYPE, cb_setgreen},
-  {"set/interval", INT_TYPE, cb_setinterval},
+  {"set/green/pwm", INT_TYPE, cb_setgreenpwm},
+  {"set/sleepinterval", INT_TYPE, cb_setSleepInterval},
+  {"",NONE_TYPE,nullptr}, ///< terminating item!
 };
 
 WiFiClient wifiClient;
 PubSubClient mqttclient(wifiClient);
+
 long lastMsg = 0;
-char msg[MAX_PAYLOAD_LEN+1]; ///< holds payload received from MQTT Broker
+char msg[MQTT_MAX_PAYLOAD_LEN+1]; ///< holds payload received from MQTT Broker
 int value = 0;
 
 extern Parameters par;
 
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
-  if (length > MAX_PAYLOAD_LEN) {
-    length = MAX_PAYLOAD_LEN;
+  if (length > MQTT_MAX_PAYLOAD_LEN) {
+    length = MQTT_MAX_PAYLOAD_LEN;
   }
 
   for (int i = 0; i < length; i++) {
@@ -107,26 +119,64 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   Serial.print("] ");
   Serial.println(msg);
 #endif
+
+  for (int i=0; subscribtion_topics[i].topic[0] != 0; i++) {
+    if (String(topic) == par.mqttTopic + "/" + String(subscribtion_topics[i].topic)) {
+      Serial.println("Received payload for topic: " + String(subscribtion_topics[i].topic));
+      subscribtion_topics[i].callback(msg);
+    }
+  }
 }
 
 void cb_setred (char* message) {
-  if(strcmp(message,"on")==0){
-    ; // turn on red
+  if(strcasecmp(message,"on")==0) {
+    // turn on red
+    Serial.println("Red light ON");
   }
-  else if(strcmp(message,"off")==0){
-    ; // turn off red
+  else if(strcasecmp(message,"off")==0) {
+   // turn off red
+    Serial.println("Red light OFF");
   }
 }
 
 void cb_setyellow(char* message) {
-  ;
+  if(strcasecmp(message,"on")==0) {
+    // turn on red
+    Serial.println("Yellow light ON");
+  }
+  else if(strcasecmp(message,"off")==0) {
+   // turn off red
+    Serial.println("Yellow light OFF");
+  }
 }
 
 void cb_setgreen  (char* message) {
-  ;
+  if(strcasecmp(message,"on")==0) {
+    // turn on red
+    Serial.println("Green light ON");
+  }
+  else if(strcasecmp(message,"off")==0) {
+   // turn off red
+    Serial.println("Green light OFF");
+  }
 }
 
-void cb_setinterval (char* message) {
+void cb_setredpwm(char* msg) {
+  int n = atoi(msg);
+  // TODO set PWM output
+}
+
+void cb_setyellowpwm(char* msg) {
+  int n = atoi(msg);
+  // TODO set PWM output
+}
+
+void cb_setgreenpwm(char* msg) {
+  int n = atoi(msg);
+  // TODO set PWM output
+}
+
+void cb_setSleepInterval (char* message) {
   int interval = 0;
   interval = atoi(message);
   if ((interval > 0) && (interval != par.sleepTime)) {
@@ -140,3 +190,46 @@ void mqttSetup() {
   mqttclient.setCallback(mqttCallback);
 }
 
+void reconnect() {
+  String topic = par.mqttTopic + "/#";
+  // Loop until we're reconnected
+  if (!mqttclient.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (mqttclient.connect(par.deviceName.c_str())) {
+      Serial.println("connected");
+      // Subscribe
+      mqttclient.subscribe(topic.c_str());
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqttclient.state());
+      // Wait some time to flush serial output
+      delay(500);
+    }
+  }
+}
+
+void mqttLoop() {
+  static unsigned int oldtime = 0;
+  if (!mqttclient.connected()) {
+    reconnect();
+  } else {
+    mqttclient.loop();
+  }
+
+  if ((0 == oldtime) || ((millis() - oldtime) > MQTT_STATUS_INTERVAL)) {
+    oldtime = millis();
+    String ipaddress = WiFi.localIP().toString();
+    String rssi = String(WiFi.RSSI());
+    String mac = String(WiFi.macAddress());
+    mqttclient.publish(String(par.mqttTopic + "/status/Devicename").c_str(), par.deviceName.c_str());
+    mqttclient.publish(String(par.mqttTopic + "/status/nwakeup").c_str(), String(bootCount).c_str());
+    mqttclient.publish(String(par.mqttTopic + "/status/sleepinterval").c_str(), String(par.sleepTime).c_str());
+    mqttclient.publish(String(par.mqttTopic + "/status/red").c_str(), String(10).c_str());
+    mqttclient.publish(String(par.mqttTopic + "/status/yellow").c_str(), String(11).c_str());
+    mqttclient.publish(String(par.mqttTopic + "/status/green").c_str(), String(12).c_str());
+    mqttclient.publish(String(par.mqttTopic + "/status/ip").c_str(), ipaddress.c_str());
+    mqttclient.publish(String(par.mqttTopic + "/status/RSSI").c_str(), rssi.c_str());
+    mqttclient.publish(String(par.mqttTopic + "/status/MAC").c_str(), mac.c_str());
+  }
+}
