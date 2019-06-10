@@ -104,8 +104,7 @@ int Parameters::init()
   wifiManager.setSaveConfigCallback(saveConfigCallback);
 
   // set max. time trying to connect to WiFi, otherwise we drain too much battery
-  //wifiManager.setConfigPortalTimeout(300000);
-
+  wifiManager.setConfigPortalTimeout(300000);
 
   if(!wifiManager.autoConnect(deviceName.c_str())) {
     Serial.println("failed to connect to SSID and hit timeout");
@@ -169,8 +168,10 @@ void Parameters::putPrefPars()
  */
 void Parameters::startConfigPortal()
 {
-  WiFi.disconnect(true);   // still not erasing the ssid/pw. Will happily reconnect on next start
-  WiFi.begin("0","0");       // adding this effectively seems to erase the previous stored SSID/PW
+  WiFi.disconnect(true,true);
+  WiFi.setAutoConnect(false);
+  WiFi.setAutoReconnect(false);
+  
   delay(1000);
   ESP.restart();
   delay(1000);

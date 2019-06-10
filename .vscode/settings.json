@@ -2,5 +2,9 @@
   "terminal.integrated.env.osx": {
     "PATH": "/Users/heilig/.platformio/penv/bin:/Users/heilig/.platformio/penv:/opt/local/bin:/opt/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/bin:/Users/heilig/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Applications/Wireshark.app/Contents/MacOS:/esptools/esp-open-sdk/xtensa-lx106-elf/bin",
     "PLATFORMIO_CALLER": "vscode"
+  },
+  "terminal.integrated.env.linux": {
+    "PATH": "/home/michael.maennel/.platformio/penv/bin:/home/michael.maennel/.platformio/penv:/home/michael.maennel/bin:/home/michael.maennel/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/db/bin:/usr/lib/jvm/java-8-oracle/jre/bin:/usr/local/go/bin:/home/michael.maennel/go/bin",
+    "PLATFORMIO_CALLER": "vscode"
   }
 }
