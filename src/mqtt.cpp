@@ -60,10 +60,12 @@
 #include "config.h"
 #include "mqtt.h"
 #include "parameters.h"
+#include "pl9823TrafficLight.h"
 
 #define DBG_MQTT  ///< enables debug output on serial port
 
 extern int bootCount;
+extern pl9823TrafficLight light;
 
 typedef enum {
   NONE_TYPE = 0,
@@ -137,10 +139,12 @@ void cb_setred (char* message) {
   if(strcasecmp(message,"on")==0) {
     // turn on red
     Serial.println("Red light ON");
+    light.activateRed();
   }
   else if(strcasecmp(message,"off")==0) {
    // turn off red
     Serial.println("Red light OFF");
+    light.turnOff();
   }
   sleepflags |= SLEEP_MQTT_RED;
 }
@@ -149,10 +153,12 @@ void cb_setyellow(char* message) {
   if(strcasecmp(message,"on")==0) {
     // turn on red
     Serial.println("Yellow light ON");
+    light.activateYellow();
   }
   else if(strcasecmp(message,"off")==0) {
    // turn off red
     Serial.println("Yellow light OFF");
+    light.turnOff();
   }
   sleepflags |= SLEEP_MQTT_YELLOW;
 }
@@ -161,10 +167,12 @@ void cb_setgreen  (char* message) {
   if(strcasecmp(message,"on")==0) {
     // turn on red
     Serial.println("Green light ON");
+    light.activateGreen();
   }
   else if(strcasecmp(message,"off")==0) {
    // turn off red
     Serial.println("Green light OFF");
+    light.turnOff();
   }
   sleepflags |= SLEEP_MQTT_GREEN;
 }

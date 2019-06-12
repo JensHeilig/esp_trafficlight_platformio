@@ -45,7 +45,7 @@
  *  General Configuration (Behaviour of Software)
  * @{ */
 #define TIME_TO_SLEEP  10        /**< Time ESP32 will stay in sleep (in seconds) */
-#define TIME_UNTIL_SLEEP  100    /**< Time ESP32 will stay awake until sleep (in seconds) */
+#define TIME_UNTIL_SLEEP  10    /**< Time ESP32 will stay awake until sleep (in seconds) */
 /** @} */
 
 /** @addtogroup Misc

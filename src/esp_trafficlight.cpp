@@ -3,8 +3,11 @@
 #include "config.h"
 #include "parameters.h"
 #include "mqtt.h"
+#include "iLedTrafficLight.h"
+#include "pl9823TrafficLight.h"
 
 Parameters par;
+pl9823TrafficLight light;
 
 
 RTC_DATA_ATTR int bootCount = 0; ///< counts number of boots since last Power-On (stored in RTC memory, persistent over Deep Sleep)
