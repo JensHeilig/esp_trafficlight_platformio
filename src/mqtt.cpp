@@ -57,6 +57,8 @@
 
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.hpp>
+
 #include "config.h"
 #include "mqtt.h"
 #include "parameters.h"
@@ -70,7 +72,10 @@ extern pl9823TrafficLight light;
 typedef enum {
   NONE_TYPE = 0,
   ONOFF_TYPE,
-  INT_TYPE
+  INT_TYPE,
+  STRING_TYPE,
+  JSON_TYPE,
+  JSON_ARRAY_TYPE
 } TYPE_t;
 
 typedef struct {
@@ -87,6 +92,8 @@ void cb_setredpwm(char* msg);
 void cb_setyellowpwm(char* msg);
 void cb_setgreenpwm(char* msg);
 void cb_setSleepInhibit (char* message);
+void cb_setLight(char* message);
+void cb_setRgb(char* message);
 
 const SUBSCRIBE_DESCRIPTION_t subscribtion_topics[] =
 {
@@ -97,8 +104,10 @@ const SUBSCRIBE_DESCRIPTION_t subscribtion_topics[] =
   {"set/green", ONOFF_TYPE, cb_setgreen},
   {"set/green/pwm", INT_TYPE, cb_setgreenpwm},
   {"set/sleepinterval", INT_TYPE, cb_setSleepInterval},
-   {"set/sleepInhibit", ONOFF_TYPE, cb_setSleepInhibit},
- {"",NONE_TYPE,nullptr}, ///< terminating item!
+  {"set/sleepInhibit", ONOFF_TYPE, cb_setSleepInhibit},
+  {"set/light", STRING_TYPE, cb_setLight},
+  {"set/rgb", JSON_TYPE, cb_setRgb},
+  {"",NONE_TYPE,nullptr}, ///< terminating item!
 };
 
 WiFiClient wifiClient;
@@ -213,6 +222,46 @@ void cb_setSleepInhibit (char* message) {
     Serial.println("sleep no longer inhibited");
     sleepflags |= SLEEP_MQTT_NOT_INHIBITED;
   }
+}
+
+void cb_setLight (char* message) {
+  if(strcasecmp(message,"green")==0) {
+    Serial.println("activate green");
+    light.activateGreen();
+  }
+  else if(strcasecmp(message,"red")==0) {
+    Serial.println("activate red");
+    light.activateRed();
+  }
+  else if(strcasecmp(message,"yellow")==0) {
+    Serial.println("activate yellow");
+    light.activateYellow();
+  }
+    else if(strcasecmp(message,"off")==0) {
+    Serial.println("turn off");
+    light.turnOff();
+  }
+  else {
+    Serial.printf("Unknown color: %s\n",message);
+  }
+}
+
+void cb_setRgb (char* message) {
+  //const size_t capacity = JSON_OBJECT_SIZE(3) + 30;
+  //DynamicJsonBuffer jsonBuffer(capacity);
+  ArduinoJson::DynamicJsonDocument jsonDoc(JSON_OBJECT_SIZE(3) + 30);
+  
+  if ( ArduinoJson::deserializeJson(jsonDoc, message).code() == ArduinoJson::DeserializationError::Ok) {
+    int red = jsonDoc["red"]; // 255
+    int green = jsonDoc["green"]; // 255
+    int blue = jsonDoc["blue"]; // 255
+
+    light.setRgb(red,green,blue);
+  }
+  else {
+    Serial.printf("Failed to parse json from: %s\n", message);
+  }
+
 }
 
 void mqttSetup() {

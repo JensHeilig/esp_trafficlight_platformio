@@ -1,79 +1,68 @@
 #include "pl9823TrafficLight.h"
 
 pl9823TrafficLight::pl9823TrafficLight():
-_pixel(1,25),
-_brightness(25),
-_blue(0,0,_brightness),
-_green(0,_brightness,0),
-_yellow(_brightness,_brightness,0),
-_red(_brightness,0,0),
-_black(0,0,0),
-_activeColor(&_yellow)
+_pixel(PIXEL_COUNT,PIXEL_PIN),
+_brightness(DEFAULT_BRIGHTNESS),
+_activeColor(_brightness,_brightness,_brightness)
 {
   _pixel.Begin();
 }
 
-pl9823TrafficLight::pl9823TrafficLight(int pin):
-_pixel(pin,1),
-_brightness(122),
-_blue(0,0,_brightness),
-_yellow(_brightness,_brightness,0),
-_red(_brightness,0,0),
-_black(0,0,0),
-_activeColor(&_blue)
-{
-  _pixel.SetPixelColor(0,_blue);
-  _pixel.Show();
-}
-
 bool pl9823TrafficLight::turnOff(){
-  _activeColor = &_black;
-  show();
+  _activeColor.R = 0;
+  _activeColor.G = 0;
+  _activeColor.B = 0;
+  return show();
 }
 
 bool pl9823TrafficLight::activateGreen(){
-  _activeColor = &_green;
-  _pixel.SetPixelColor(0,_green);
-  _pixel.Show();
+  _activeColor.R = 0;
+  _activeColor.G = _brightness;
+  _activeColor.B = 0;
+  return show();
 }
 
 bool pl9823TrafficLight::activateRed(){
-  _activeColor = &_red;
-  show();
+    _activeColor.R = _brightness;
+  _activeColor.G = 0;
+  _activeColor.B = 0;
+  return show();
 }
 
 bool pl9823TrafficLight::activateYellow(){
-  _activeColor = &_yellow;
-  show();
+    _activeColor.R = _brightness;
+  _activeColor.G = _brightness;
+  _activeColor.B = 0;
+  return show();
 }
 
+bool pl9823TrafficLight::setRgb(const int red, const int green, const int blue) {
+  _activeColor.R = red;
+  _activeColor.G = green;
+  _activeColor.B = blue;
+  return show();
+}
+
+
 bool pl9823TrafficLight::dim() {
-  _yellow.R = _yellow.R - 10;
-  _yellow.G = _yellow.G - 10;
+  _activeColor.R -= 10;
+  _activeColor.G -= 10;
+  _activeColor.B -= 10;
 
-  _red.R -= 10;
-
-  _green.G -= 10;
-
-  _blue.B -= 10;
-
-  show();
+  return show();
 }
 
 bool pl9823TrafficLight::bright() {
-  _yellow.R = _yellow.R + 10;
-  _yellow.G = _yellow.G + 10;
+  _activeColor.R += 10;
+  _activeColor.G += 10;
+  _activeColor.B += 10;
 
-  _red.R += 10;
-
-  _green.G += 10;
-
-  _blue.B += 10;
-
-  show();
+  return show();
 }
 
 bool pl9823TrafficLight::show() {
-  _pixel.SetPixelColor(0,*_activeColor);
+  _pixel.SetPixelColor(0,_activeColor);
   _pixel.Show();
+
+  return true;
 }

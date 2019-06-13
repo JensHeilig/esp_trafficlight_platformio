@@ -55,6 +55,10 @@ void setup() {
   digitalWrite(LED, HIGH);
 
   Serial.begin(115200);
+  while(!Serial) {
+    delay(100);
+    Serial.print(". ");
+  }
 
   if (0 != par.init()) {
     // Could not connect to WiFi ==> go to sleep
