@@ -214,11 +214,11 @@ void cb_setSleepInterval (char* message) {
 }
 
 void cb_setSleepInhibit (char* message) {
-  if(strcasecmp(message,"on")==0) {
+  if((strcasecmp(message,"on")==0) || (strcmp(message, "1")==0)){
     Serial.println("sleep inhibited");
     sleepflags &= ~SLEEP_MQTT_NOT_INHIBITED;
   }
-  else if(strcasecmp(message,"off")==0) {
+  else if((strcasecmp(message,"off")==0) || (strcmp(message, "0")==0)) {
     Serial.println("sleep no longer inhibited");
     sleepflags |= SLEEP_MQTT_NOT_INHIBITED;
   }
