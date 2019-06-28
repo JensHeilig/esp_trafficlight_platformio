@@ -23,14 +23,14 @@ bool pl9823TrafficLight::activateGreen(){
 }
 
 bool pl9823TrafficLight::activateRed(){
-    _activeColor.R = _brightness;
+  _activeColor.R = _brightness;
   _activeColor.G = 0;
   _activeColor.B = 0;
   return show();
 }
 
 bool pl9823TrafficLight::activateYellow(){
-    _activeColor.R = _brightness;
+  _activeColor.R = _brightness;
   _activeColor.G = _brightness;
   _activeColor.B = 0;
   return show();
@@ -66,3 +66,44 @@ bool pl9823TrafficLight::show() {
 
   return true;
 }
+
+/**
+ * returns a JSON string with the RGB values in the provided buffer.
+ * @param buf - buffer which will hold the returned string
+ * @param sz - size of buffer in bytes
+ */
+bool pl9823TrafficLight::getRgbJson(char* buf, size_t sz)
+{
+  if (snprintf(buf, sz, "{\"red\":%d,\"green\":%d,\"blue\":%d}", _activeColor.R, _activeColor.G, _activeColor.B) <= sz)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  } 
+}
+
+/**
+ * returns the currently active red color value
+ */
+ int pl9823TrafficLight::getRed()
+ {
+   return _activeColor.R;
+ }
+
+ /**
+ * returns the currently active green color value
+ */
+ int pl9823TrafficLight::getGreen()
+ {
+   return _activeColor.G;
+ }
+
+ /**
+ * returns the currently active blue color value
+ */
+ int pl9823TrafficLight::getBlue()
+ {
+   return _activeColor.B;
+ }

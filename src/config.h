@@ -45,7 +45,7 @@
  *  General Configuration (Behaviour of Software)
  * @{ */
 #define TIME_TO_SLEEP  10        /**< Time ESP32 will stay in sleep (in seconds) */
-#define TIME_UNTIL_SLEEP  10    /**< Time ESP32 will stay awake until sleep (in seconds) */
+#define TIME_UNTIL_SLEEP  10     /**< Time ESP32 will stay awake until sleep (in seconds) */
 /** @} */
 
 /** @addtogroup Misc
@@ -73,5 +73,14 @@ extern unsigned int sleepflags;     /**< bitfield in which all components may si
 
 #define SLEEP_READY_MASK (SLEEP_MQTT_RED | SLEEP_MQTT_YELLOW | SLEEP_MQTT_GREEN | SLEEP_MQTT_STATUS_SENT | SLEEP_MQTT_NOT_INHIBITED) /**< all required flags before going to sleep */
 /** @} */
+
+/** @addtogroup ledcolor LED Color definition
+ *  Define RGB values for the fixed colors "Red", "Green" and "Yellow" (the traffic light colors)
+ * @{ */
+#define RGB_RED    255,0,0 /**< The RGB values for "Red" */
+#define RGB_YELLOW 255,255,0 /**< The RGB values for "Yellow" */
+#define RGB_GREEN  0,255,0 /**< The RGB values for "Green" */
+/** @} */
+
 
 #endif /* ifndef CONFIG_H */

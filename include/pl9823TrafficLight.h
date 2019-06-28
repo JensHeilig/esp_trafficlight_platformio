@@ -23,6 +23,10 @@ public:
   virtual bool dim();
   virtual bool bright();
   virtual bool show();
+  virtual bool getRgbJson(char* buf, size_t sz);
+  virtual int getRed();
+  virtual int getGreen();
+  virtual int getBlue();
 
 private:
 NeoPixelBus <NeoRgbFeature, NeoEsp32I2s0800KbpsMethod> _pixel;
