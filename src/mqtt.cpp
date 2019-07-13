@@ -223,15 +223,26 @@ void cb_setLight (char* message) {
 void cb_setRgb (char* message) {
   //const size_t capacity = JSON_OBJECT_SIZE(3) + 30;
   //DynamicJsonBuffer jsonBuffer(capacity);
-  ArduinoJson::DynamicJsonDocument jsonDoc(JSON_OBJECT_SIZE(3) + 30);
+  ArduinoJson::DynamicJsonDocument jsonDoc(JSON_OBJECT_SIZE(4) + 50);
   
   if ( ArduinoJson::deserializeJson(jsonDoc, message).code() == ArduinoJson::DeserializationError::Ok) {
     int red = jsonDoc["red"]; // 255
     int green = jsonDoc["green"]; // 255
     int blue = jsonDoc["blue"]; // 255
+    String sleepInhibit = jsonDoc["sleepInhibit"];
 
     light.setRgb(red,green,blue);
+    Serial.printf("SleepInhibit in JSON: %s\n",sleepInhibit.c_str());
     sleepflags |= SLEEP_MQTT_RED | SLEEP_MQTT_GREEN | SLEEP_MQTT_YELLOW;
+    if((strcasecmp(sleepInhibit.c_str(),"on")==0) || (strcmp(sleepInhibit.c_str(), "1")==0)){
+      Serial.println("sleep inhibited");
+      sleepflags &= ~SLEEP_MQTT_NOT_INHIBITED;
+    }
+    else if((strcasecmp(sleepInhibit.c_str(),"off")==0) || (strcmp(sleepInhibit.c_str(), "0")==0)) {
+      Serial.println("sleep no longer inhibited");
+      sleepflags |= SLEEP_MQTT_NOT_INHIBITED;
+    }
+
   }
   else {
     Serial.printf("Failed to parse json from: %s\n", message);
