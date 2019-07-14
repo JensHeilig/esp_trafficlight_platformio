@@ -40,7 +40,7 @@
  * subscribe:.../set/green ON/OFF
  * subscribe:.../set/sleepinterval {Zeit in Sekunden die das Gerät schläft, bevor es sich wieder aufweckt. Default: 20 Sekunden}
  * subscribe:.../set/sleepInhibit ON/OFF to prevent device from going to sleep (set this as retained to ON to keep device awake)
- * subscribe:.../set/rgb JSON Message: {"red": 127, "green":1, "blue":255} (set this as retained to make it available on device wake-up)
+ * subscribe:.../set/rgb JSON Message: {"red": 127, "green":1, "blue":255, "sleepInhibit", "ON|OFF|1|0"} where "sleepInhibit" is optional. (set this as retained to make it available on device wake-up)
  * publish: .../status/Devicename {Gerätename}
  * publish: .../status/nwakeup {wie oft ist das Gerät schon aufgewacht}
  * publish: .../status/interval {Welche Sleep-Time ist gerade eingestellt}
@@ -50,6 +50,7 @@
  * publish: .../status/ip {Welche IP Adresse haben wir gerade}
  * publish: .../status/RSSI {signal strength}
  * publish: .../status/MAC {MAC address}
+ * publish: .../status/sleepInhibit {ON|OFF}
  <hr>
 **************************************************************************/
 
@@ -110,6 +111,19 @@ char msg[MQTT_MAX_PAYLOAD_LEN+1]; ///< holds payload received from MQTT Broker
 int value = 0;
 
 extern Parameters par;
+
+void mqttPublishLEDStatus()
+{
+  char rgbstr[MQTT_MAX_PAYLOAD_LEN];
+  //mqttclient.publish(String(par.mqttTopic + "/status/red").c_str(), String(light.getRed()).c_str());
+  //mqttclient.publish(String(par.mqttTopic + "/status/green").c_str(), String(light.getGreen()).c_str());
+  //mqttclient.publish(String(par.mqttTopic + "/status/blue").c_str(), String(light.getBlue()).c_str());
+  light.getRgbJson(rgbstr, sizeof(rgbstr));
+  mqttclient.publish(String(par.mqttTopic + "/status/rgb").c_str(), rgbstr);
+  mqttclient.publish(String(par.mqttTopic + "/status/sleepInhibit").c_str(), (sleepflags & SLEEP_MQTT_NOT_INHIBITED) ? "OFF" : "ON");
+  sleepflags |= SLEEP_MQTT_STATUS_SENT;
+  delay(50);
+}
 
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   if (length > MQTT_MAX_PAYLOAD_LEN) {
@@ -218,6 +232,7 @@ void cb_setLight (char* message) {
   else {
     Serial.printf("Unknown color: %s\n",message);
   }
+  mqttPublishLEDStatus();
 }
 
 void cb_setRgb (char* message) {
@@ -242,7 +257,7 @@ void cb_setRgb (char* message) {
       Serial.println("sleep no longer inhibited");
       sleepflags |= SLEEP_MQTT_NOT_INHIBITED;
     }
-
+    mqttPublishLEDStatus();
   }
   else {
     Serial.printf("Failed to parse json from: %s\n", message);
@@ -274,30 +289,26 @@ void reconnect() {
 }
 
 void mqttLoop() {
+  String ipaddress = WiFi.localIP().toString();
+  String rssi = String(WiFi.RSSI());
+  String mac = String(WiFi.macAddress());
   static unsigned int oldtime = 0;
-  char rgbstr[MQTT_MAX_PAYLOAD_LEN];
   if (!mqttclient.connected()) {
     reconnect();
   } else {
     mqttclient.loop();
 
-    if ((0 == oldtime) || ((millis() - oldtime) > MQTT_STATUS_INTERVAL)) {
-      oldtime = millis();
-      String ipaddress = WiFi.localIP().toString();
-      String rssi = String(WiFi.RSSI());
-      String mac = String(WiFi.macAddress());
+    if ((oldtime == 0) || ((millis() - oldtime) > MQTT_STATUS_INTERVAL)) {
       mqttclient.publish(String(par.mqttTopic + "/status/Devicename").c_str(), par.deviceName.c_str());
       mqttclient.publish(String(par.mqttTopic + "/status/nwakeup").c_str(), String(bootCount).c_str());
       mqttclient.publish(String(par.mqttTopic + "/status/sleepinterval").c_str(), String(par.sleepTime).c_str());
-      mqttclient.publish(String(par.mqttTopic + "/status/red").c_str(), String(light.getRed()).c_str());
-      mqttclient.publish(String(par.mqttTopic + "/status/green").c_str(), String(light.getGreen()).c_str());
-      mqttclient.publish(String(par.mqttTopic + "/status/blue").c_str(), String(light.getBlue()).c_str());
       mqttclient.publish(String(par.mqttTopic + "/status/ip").c_str(), ipaddress.c_str());
       mqttclient.publish(String(par.mqttTopic + "/status/RSSI").c_str(), rssi.c_str());
       mqttclient.publish(String(par.mqttTopic + "/status/MAC").c_str(), mac.c_str());
-      light.getRgbJson(rgbstr, sizeof(rgbstr));
-      mqttclient.publish(String(par.mqttTopic + "/status/rgb").c_str(), rgbstr);
-      sleepflags |= SLEEP_MQTT_STATUS_SENT;
+      if (oldtime != 0) {
+        mqttPublishLEDStatus();
+      }
+      oldtime = millis();
     }
   }
 }
