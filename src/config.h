@@ -54,7 +54,7 @@
 #define uS_TO_SECS 1000000  /**< Conversion factor for microseconds to seconds */
 #define MS_TO_SECS 1000     /**< Conversion factor for milliseconds to seconds */
 
-#define MQTT_MAX_PAYLOAD_LEN 50  /**< maximum length (in bytes)  for payload received from mqtt */
+#define MQTT_MAX_PAYLOAD_LEN 70  /**< maximum length (in bytes)  for payload received from mqtt */
 #define MQTT_MAX_TOPIC_LEN 50  /**< maximum length (in bytes)  for mqtt topic*/
 #define MQTT_STATUS_INTERVAL 10000 /**< interval time in milliseconds after which the device status will be sent over MQTT */
 

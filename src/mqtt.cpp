@@ -223,8 +223,8 @@ void cb_setLight (char* message) {
 void cb_setRgb (char* message) {
   //const size_t capacity = JSON_OBJECT_SIZE(3) + 30;
   //DynamicJsonBuffer jsonBuffer(capacity);
-  ArduinoJson::DynamicJsonDocument jsonDoc(JSON_OBJECT_SIZE(4) + 50);
-  
+  ArduinoJson::DynamicJsonDocument jsonDoc(JSON_OBJECT_SIZE(4) + 30);
+
   if ( ArduinoJson::deserializeJson(jsonDoc, message).code() == ArduinoJson::DeserializationError::Ok) {
     int red = jsonDoc["red"]; // 255
     int green = jsonDoc["green"]; // 255
