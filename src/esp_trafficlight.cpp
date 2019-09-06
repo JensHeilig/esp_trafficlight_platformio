@@ -80,6 +80,7 @@ void setup() {
 void loop() {
   static unsigned long oldtime = 0;
   static unsigned long longpress = 0;
+  static unsigned int flag_CfgPortalStarted = 0;
 
   mqttLoop();
 
@@ -102,14 +103,18 @@ void loop() {
       if (((millis() - longpress) / MS_TO_SECS) > LONG_PRESS_TIME)
       {
         Serial.println("Long press Event dected");
-        par.startConfigPortal();
+        if (!flag_CfgPortalStarted)
+        {
+          par.startConfigPortal(); // XXX TODO after ConfigPortal has set parameters give it some time to store them in Flash before going to sleep!
+        }
+        flag_CfgPortalStarted = 1;
         longpress=0;
       }
     } else
     {
       longpress = millis();
     }
-    
+
   } else
   {
     longpress=0;
@@ -132,8 +137,15 @@ void loop() {
       goToSleep();
     } else {
       Serial.println("Sleep inhibited. Not sleeping.");
+      if (!flag_CfgPortalStarted)
+      {
+        Serial.println("Starting ConfigPortal...");
+        //par.startConfigPortal();  // Does not work yet. Problem 1: Whenever captive portal starts, it forgets the SSID, so no graceful recovery after inhibit=true without user intervention. Problem 2: Saving parameters of config portal does not work reliably. Because we go to sleep too soon?
+      }
+      flag_CfgPortalStarted = 1;
       twait = millis();
       oldtime = (millis() - twait) / MS_TO_SECS;
     }
   }
+  delay(1);
 }
