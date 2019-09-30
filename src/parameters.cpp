@@ -104,7 +104,7 @@ int Parameters::init()
   wifiManager.setSaveConfigCallback(saveConfigCallback);
 
   // set max. time trying to connect to WiFi, otherwise we drain too much battery
-  wifiManager.setConfigPortalTimeout(300000);
+  wifiManager.setConfigPortalTimeout(30);
 
   if(!wifiManager.autoConnect(deviceName.c_str())) {
     Serial.println("failed to connect to SSID and hit timeout");
@@ -168,10 +168,19 @@ void Parameters::putPrefPars()
  */
 void Parameters::startConfigPortal()
 {
+  // TODO: wifiManager.startConfigPortal(); after initializing parameters
+  ;
+}
+
+/**
+ * Reset Wifi configuration to allow AP mode and setting a new Wifi configuration by the user.
+ */
+void Parameters::resetWifiConfig()
+{
   WiFi.disconnect(true,true);
   WiFi.setAutoConnect(false);
   WiFi.setAutoReconnect(false);
-  
+
   delay(1000);
   ESP.restart();
   delay(1000);

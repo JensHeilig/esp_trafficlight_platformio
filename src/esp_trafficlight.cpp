@@ -41,7 +41,7 @@ void goToSleep()
 {
   /*
   First we configure the wake up source
-  We set our ESP32 to wake up every 5 seconds
+  We set our ESP32 to wake up every par.sleepTime seconds
   */
   esp_sleep_enable_timer_wakeup(par.sleepTime * uS_TO_SECS);
   Serial.println("Setup ESP32 to sleep for " + String(par.sleepTime) + " Seconds");
@@ -102,10 +102,10 @@ void loop() {
     {
       if (((millis() - longpress) / MS_TO_SECS) > LONG_PRESS_TIME)
       {
-        Serial.println("Long press Event dected");
+        Serial.println("Long press Event dected: Erasing WLAN config, restarting in WLAN AP mode");
         if (!flag_CfgPortalStarted)
         {
-          par.startConfigPortal(); // XXX TODO after ConfigPortal has set parameters give it some time to store them in Flash before going to sleep!
+          par.resetWifiConfig();
         }
         flag_CfgPortalStarted = 1;
         longpress=0;
@@ -140,7 +140,7 @@ void loop() {
       if (!flag_CfgPortalStarted)
       {
         Serial.println("Starting ConfigPortal...");
-        //par.startConfigPortal();  // Does not work yet. Problem 1: Whenever captive portal starts, it forgets the SSID, so no graceful recovery after inhibit=true without user intervention. Problem 2: Saving parameters of config portal does not work reliably. Because we go to sleep too soon?
+        par.startConfigPortal();
       }
       flag_CfgPortalStarted = 1;
       twait = millis();

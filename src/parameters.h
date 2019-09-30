@@ -25,7 +25,7 @@
  *
  * @date   2019-02-16
  * @author Jens Heilig
- * @brief  
+ * @brief
  *
  * Handles User-settable parameters, user-configuration.
  * This includes WiFi parameters (SSID, password), MQTT
@@ -58,7 +58,8 @@ class Parameters {
      */
     int init();
     void putPrefPars(); /**< stores all parameters in EEPROM */
-    void startConfigPortal();
+    void resetWifiConfig(); /**< reset Wifi configuration */
+    void startConfigPortal(); /**< Start the WifiConfiguration Portal */
 
   private:
     void initPrefPars(); /**< Set up parameters module */
