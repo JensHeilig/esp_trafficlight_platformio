@@ -25,12 +25,12 @@
  *
  * @date   2019-02-16
  * @author Jens Heilig
- * @brief  
+ * @brief
  *
  * Handles all things MQTT.
  * Connect to broker, subscribe to topics, handle callbacks,
  * publish to topics
- * 
+ *
  * verbindet sich automatisch zum konfigurierten Broker
  * subscribed zu einem konfigurierbaren Topic. Default: eSystems/Ampeln/${Gerätename oder Nummer}
  * Einstellbar ist der komplette String, "%s" im String wird automatisch durch den Gerätenamen ersetzt
@@ -294,6 +294,8 @@ void mqttLoop() {
   String mac = String(WiFi.macAddress());
   static unsigned int oldtime = 0;
   if (!mqttclient.connected()) {
+    Serial.println("Reconnecting to MQTT broker...");
+    delay(1000);
     reconnect();
   } else {
     mqttclient.loop();
