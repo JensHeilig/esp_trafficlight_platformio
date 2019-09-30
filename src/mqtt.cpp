@@ -230,7 +230,7 @@ void cb_setLight (char* message) {
     light.turnOff();
   }
   else {
-    Serial.printf("Unknown color: %s\n",message);
+    Serial.printf("Unknown color: %s\r\n",message);
   }
   mqttPublishLEDStatus();
 }
@@ -247,7 +247,7 @@ void cb_setRgb (char* message) {
     String sleepInhibit = jsonDoc["sleepInhibit"];
 
     light.setRgb(red,green,blue);
-    Serial.printf("SleepInhibit in JSON: %s\n",sleepInhibit.c_str());
+    Serial.printf("SleepInhibit in JSON: %s\r\n",sleepInhibit.c_str());
     sleepflags |= SLEEP_MQTT_RED | SLEEP_MQTT_GREEN | SLEEP_MQTT_YELLOW;
     if((strcasecmp(sleepInhibit.c_str(),"on")==0) || (strcmp(sleepInhibit.c_str(), "1")==0)){
       Serial.println("sleep inhibited");
@@ -260,7 +260,7 @@ void cb_setRgb (char* message) {
     mqttPublishLEDStatus();
   }
   else {
-    Serial.printf("Failed to parse json from: %s\n", message);
+    Serial.printf("Failed to parse json from: %s\r\n", message);
   }
 }
 
