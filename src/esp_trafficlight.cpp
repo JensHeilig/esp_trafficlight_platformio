@@ -5,10 +5,11 @@
 #include "mqtt.h"
 #include "iLedTrafficLight.h"
 #include "pl9823TrafficLight.h"
+#include "esp_system.h"
 
 Parameters par;
 pl9823TrafficLight light;
-
+hw_timer_t *timer = NULL;
 
 RTC_DATA_ATTR int bootCount = 0; ///< counts number of boots since last Power-On (stored in RTC memory, persistent over Deep Sleep)
 unsigned int twait = 0; ///< measure time before going to sleep
@@ -32,6 +33,14 @@ void print_wakeup_reason(){
     case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
     default : Serial.printf("Wakeup was not caused by deep sleep: %d\r\n",wakeup_reason); break;
   }
+}
+
+/*
+ * Reset the ESP32
+ */
+void IRAM_ATTR resetModule(){
+    ets_printf("reboot\n");
+    esp_restart();
 }
 
 /**
@@ -69,6 +78,12 @@ void setup() {
   ++bootCount;
   Serial.println("Boot number (since last Power-Off): " + String(bootCount));
 
+  // Set up watchdog to reboot the device in case of watchdog timeout
+  timer = timerBegin(0, 80, true); //timer 0, div 80
+    timerAttachInterrupt(timer, &resetModule, true);
+    timerAlarmWrite(timer, 5000000, false); //set time in us, 5 seconds should be a good value
+    timerAlarmEnable(timer);
+
   //Print the wakeup reason for ESP32
   print_wakeup_reason();
 
@@ -82,6 +97,7 @@ void loop() {
   static unsigned long longpress = 0;
   static unsigned int flag_CfgPortalStarted = 0;
 
+  timerWrite(timer, 0); // feed watchdog
   mqttLoop();
 
   if ((SLEEP_READY_MASK & sleepflags) == SLEEP_READY_MASK) {
